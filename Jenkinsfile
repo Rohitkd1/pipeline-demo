@@ -27,14 +27,52 @@ pipeline {
                 '''
             }
         }
+
+        stage('Publish Report') {
+            steps {
+                publishHTML(target: [
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'reports',
+                    reportFiles: 'report.html',
+                    reportName: 'Test Report'
+                ])
+            }
+        }
     }
 
     post {
+        always {
+            echo 'Pipeline finished. Cleaning up...'
+            sh 'docker rmi sdet-tests:latest || true'
+        }
         success {
             echo '✅ All tests passed!'
+            mail(
+                to: 'rohitkd430@gmail.com',
+                subject: "✅ PASSED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+                    Build passed successfully.
+                    Job: ${env.JOB_NAME}
+                    Build: #${env.BUILD_NUMBER}
+                    URL: ${env.BUILD_URL}
+                """
+            )
         }
         failure {
             echo '❌ Tests failed!'
+            mail(
+                to: 'rohitkd430@gmail.com',
+                subject: "❌ FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+                    Build failed! Check the test report.
+                    Job: ${env.JOB_NAME}
+                    Build: #${env.BUILD_NUMBER}
+                    URL: ${env.BUILD_URL}
+                    Report: ${env.BUILD_URL}Test_Report/
+                """
+            )
         }
     }
 }
