@@ -1,5 +1,6 @@
 pipeline {
     agent any
+
     stages {
         stage('Checkout') {
             steps {
@@ -7,36 +8,36 @@ pipeline {
                 checkout scm
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker image...'
                 sh 'docker build -t sdet-tests:latest .'
             }
         }
+
         stage('Run Tests') {
             steps {
                 echo 'Running tests inside container...'
                 sh '''
                     mkdir -p reports
+                    chmod 777 reports
                     docker run --rm \
                       -v ${WORKSPACE}/reports:/app/reports \
                       sdet-tests:latest
                 '''
             }
         }
-        stage('Publish Report') {
+
+        stage('Archive Report') {
             steps {
-                publishHTML(target: [
-                    allowMissing: false,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: 'reports',
-                    reportFiles: 'report.html',
-                    reportName: 'TestReport'
-                ])
+                archiveArtifacts artifacts: 'reports/report.html',
+                                 fingerprint: true,
+                                 allowEmptyArchive: false
             }
         }
     }
+
     post {
         always {
             echo 'Pipeline finished. Cleaning up...'
