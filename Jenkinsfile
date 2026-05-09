@@ -36,7 +36,7 @@ pipeline {
                     keepAll: true,
                     reportDir: 'reports',
                     reportFiles: 'report.html',
-                    reportName: 'Test Report'
+                    reportName: 'Test_Report'
                 ])
             }
         }
