@@ -22,9 +22,12 @@ pipeline {
                 sh '''
                     mkdir -p reports
                     chmod 777 reports
-                    docker run --rm \
-                      -v ${WORKSPACE}/reports:/app/reports \
-                      sdet-tests:latest
+	            docker run --name test-runner \
+                      sdet-tests:latest || true
+
+                    
+                    docker cp test-runner:/app/reports/report.html reports/report.html
+                    docker rm test-runner
                 '''
             }
         }
